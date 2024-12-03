@@ -34,17 +34,54 @@
 /*****************************************************************************/
 
 asm_function aligned_block_copy_sse2
-//TODO
+0:
+    movdqa      xmm0,       [SRC + 0]
+    movdqa      xmm1,       [SRC + 16]
+    movdqa      xmm2,       [SRC + 32]
+    movdqa      xmm3,       [SRC + 48]
+    movdqa      [DST + 0],  xmm0
+    movdqa      [DST + 16], xmm1
+    movdqa      [DST + 32], xmm2
+    movdqa      [DST + 48], xmm3
+    add         SRC,        64
+    add         DST,        64
+    sub         SIZE,       64
+    jg          0b
     ret
 .endfunc
 
 asm_function aligned_block_copy_nt_sse2
-//TODO
+0:
+    movdqa      xmm0,       [SRC + 0]
+    movdqa      xmm1,       [SRC + 16]
+    movdqa      xmm2,       [SRC + 32]
+    movdqa      xmm3,       [SRC + 48]
+    movntdq     [DST + 0],  xmm0
+    movntdq     [DST + 16], xmm1
+    movntdq     [DST + 32], xmm2
+    movntdq     [DST + 48], xmm3
+    add         SRC,        64
+    add         DST,        64
+    sub         SIZE,       64
+    jg          0b
     ret
 .endfunc
 
 asm_function aligned_block_copy_nt_pf_sse2
-//TODO
+0:
+    prefetchnta [SRC + PREFETCH_DISTANCE]
+    movdqa      xmm0,       [SRC + 0]
+    movdqa      xmm1,       [SRC + 16]
+    movdqa      xmm2,       [SRC + 32]
+    movdqa      xmm3,       [SRC + 48]
+    movntdq     [DST + 0],  xmm0
+    movntdq     [DST + 16], xmm1
+    movntdq     [DST + 32], xmm2
+    movntdq     [DST + 48], xmm3
+    add         SRC,        64
+    add         DST,        64
+    sub         SIZE,       64
+    jg          0b
     ret
 .endfunc
 

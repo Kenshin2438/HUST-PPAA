@@ -142,6 +142,7 @@ lib/*
 bin/*
 test/test_runner
 
-## membw
 membw/membw
 !membw/Makefile
+.cache/*
+.vscode/*

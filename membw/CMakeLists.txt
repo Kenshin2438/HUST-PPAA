@@ -1,4 +1,4 @@
-project(membw ASM C)
+project(membw LANGUAGES ASM C)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 # Warning: missing .note.GNU-stack section implies executable stack

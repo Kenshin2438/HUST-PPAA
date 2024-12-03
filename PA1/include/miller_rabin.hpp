@@ -31,7 +31,6 @@ static inline auto miller_rabin_test(const u64 n) -> bool {
   const int t = std::countr_zero(n - 1);
   const u64 k = std::rotr(n - 1, t);
   for (const u64 &a : SPRP) {
-    if (a >= n) break;  // Skip if a is greater than n
     u64 tmp = modpow(a, k, n);
     if (tmp <= 1 || tmp == n - 1) continue;
     for (int i = 0; i < t; i++) {

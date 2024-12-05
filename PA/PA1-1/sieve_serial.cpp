@@ -1,25 +1,22 @@
+#include <bitset>
 #include <cmath>
 #include <format>
 #include <fstream>
 #include <iostream>
-#include <utility>
 #include <vector>
 
-#if defined(EULER_SIEVE)
+#if defined(EULER_SIEVE) && defined(__linux__)
   #include <sys/resource.h>
-
-  #include <bitset>
-#endif
-
-auto main(int argc, char **argv) -> int {
-
-#if defined(EULER_SIEVE)  // set stack-size = 256MB
+auto __init = []() -> int {  // set stack-size = 256MB
   rlimit rlim;
   if (getrlimit(RLIMIT_STACK, &rlim)) return 1;
   rlim.rlim_cur = 256 * 1024 * 1024;
   if (setrlimit(RLIMIT_STACK, &rlim)) return 2;
+  return 0;
+}();
 #endif
 
+auto main() -> int {
   constexpr int N = 100'000'000;
 
   std::vector<int> prime;
@@ -43,7 +40,7 @@ auto main(int argc, char **argv) -> int {
   prime.emplace_back(2);
   for (int i = 3; i <= S; i += 2)
     if (!sieve[i]) {
-      cp.push_back({i, i * i / 2});
+      cp.emplace_back(i, i * i / 2);
       for (int j = i * i; j <= S; j += 2 * i) sieve[j] = 1;
     }
   for (int L = 1; L <= R; L += S) {

@@ -8,7 +8,7 @@
 
 #include "miller_rabin.hpp"
 
-auto main(int argc, char **argv) -> int {
+auto main() -> int {
   using std::chrono::duration_cast;
   using std::chrono::high_resolution_clock;
   using std::chrono::milliseconds;

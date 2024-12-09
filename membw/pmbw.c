@@ -1,7 +1,10 @@
+#define _GNU_SOURCE /* See feature_test_macros(7) */
+
 #include <assert.h>
 #include <math.h>
 #include <memory.h>
 #include <pthread.h>
+#include <sched.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -30,9 +33,12 @@ typedef struct {
 
 void *task(void *arg) {
   const info *data = (info *)arg;
-
-  double t2, t1 = gettime();
+  double t2, t1;
   int64_t loopcount = 0;
+
+  // printf("[Log] thread %lu is running on cpu %d\n", pthread_self(), sched_getcpu());
+  memcpy(data->dstbuf, data->srcbuf, SIZE);
+  t1 = gettime();
   do {
     loopcount++;
     for (int i = 0; i < COUNT; i++) {
@@ -63,9 +69,23 @@ int main(int argc, char *argv[]) {
   s0 = s1 = s2 = 0;
   maxspeed = 0;
 
+#ifdef COURSE_CUNOK  // initialize NUMA node cpuset (lscpu)
+  cpu_set_t numa_0;
+  CPU_ZERO(&numa_0);
+  for (int i = 00; i <= 13; i++) CPU_SET(i, &numa_0);
+  for (int i = 28; i <= 41; i++) CPU_SET(i, &numa_0);
+  cpu_set_t numa_1;
+  CPU_ZERO(&numa_1);
+  for (int i = 14; i <= 27; i++) CPU_SET(i, &numa_1);
+  for (int i = 42; i <= 55; i++) CPU_SET(i, &numa_1);
+#endif
+
   for (int _ = 0; _ < MAXREPEATS; _++) {
     double t1 = gettime();
     for (int i = 0; i < P; i++) {
+#ifdef COURSE_CUNOK
+      sched_setaffinity(0, sizeof(cpu_set_t), (i & 1 ? &numa_0 : &numa_1));
+#endif
       pthread_create(&tester[i], NULL, task, (void *)args[i]);
     }
     for (int i = 0; i < P; i++) pthread_join(tester[i], &retvals[i]);

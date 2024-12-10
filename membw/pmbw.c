@@ -31,13 +31,15 @@ typedef struct {
   int64_t *dstbuf;
 } info;
 
+static pthread_barrier_t barrier;
+
 void *task(void *arg) {
   const info *data = (info *)arg;
   double t2, t1;
   int64_t loopcount = 0;
 
-  // printf("[Log] thread %lu is running on cpu %d\n", pthread_self(), sched_getcpu());
-  memcpy(data->dstbuf, data->srcbuf, SIZE);
+  pthread_barrier_wait(&barrier);
+
   t1 = gettime();
   do {
     loopcount++;
@@ -53,43 +55,49 @@ int main(int argc, char *argv[]) {
   assert(argc == 2 && "Plz input the thread number.\n");
   const int P = atoi(argv[1]);
 
+#ifdef COURSE_CUNOK
+  cpu_set_t *cpuset = (cpu_set_t *)malloc(P * sizeof(cpu_set_t));
+  for (int i = 0; i < P; i++) {
+    const int id = 14 * (i % 4) + ((i % 4) >= 2 ? 13 - (i / 4) : (i / 4));
+    CPU_ZERO(&cpuset[i]);
+    CPU_SET(id, &cpuset[i]);
+  }
+#endif
+
+  pthread_t *tester = (pthread_t *)malloc(P * sizeof(pthread_t));
+  void **retvals = (void **)malloc(P * sizeof(void *));
+
   info **args = (info **)malloc(P * sizeof(info *));
   for (int i = 0; i < P; i++) {
+#ifdef COURSE_CUNOK
+    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset[i]);
+#endif
     args[i] = (info *)malloc(sizeof(info));
     args[i]->buf_ = alloc_four_aligned_buffers((void **)(&(args[i]->srcbuf)), SIZE, NULL, 0,
                                                (void **)(&(args[i]->dstbuf)), SIZE, NULL, 0);
     if (args[i] == NULL) return EXIT_FAILURE;
+    memcpy(args[i]->dstbuf, args[i]->srcbuf, SIZE);
   }
-  pthread_t *tester = (pthread_t *)malloc(P * sizeof(pthread_t));
-  void **retvals = (void **)malloc(P * sizeof(void *));
 
   // parallel bandwidth bench
+  double t1, t2;
   double speed, maxspeed;
   double s, s0, s1, s2;
   s0 = s1 = s2 = 0;
   maxspeed = 0;
 
-#ifdef COURSE_CUNOK  // initialize NUMA node cpuset (lscpu)
-  cpu_set_t numa_0;
-  CPU_ZERO(&numa_0);
-  for (int i = 00; i <= 13; i++) CPU_SET(i, &numa_0);
-  for (int i = 28; i <= 41; i++) CPU_SET(i, &numa_0);
-  cpu_set_t numa_1;
-  CPU_ZERO(&numa_1);
-  for (int i = 14; i <= 27; i++) CPU_SET(i, &numa_1);
-  for (int i = 42; i <= 55; i++) CPU_SET(i, &numa_1);
-#endif
-
   for (int _ = 0; _ < MAXREPEATS; _++) {
-    double t1 = gettime();
+    pthread_barrier_init(&barrier, NULL, P);
     for (int i = 0; i < P; i++) {
 #ifdef COURSE_CUNOK
-      sched_setaffinity(0, sizeof(cpu_set_t), (i & 1 ? &numa_0 : &numa_1));
+      sched_setaffinity(0, sizeof(cpu_set_t), &cpuset[i]);
 #endif
       pthread_create(&tester[i], NULL, task, (void *)args[i]);
+      if (i == P - 1) t1 = gettime();
     }
     for (int i = 0; i < P; i++) pthread_join(tester[i], &retvals[i]);
-    double t2 = gettime();
+    t2 = gettime();
+    pthread_barrier_destroy(&barrier);
 
     int64_t loops = 0;
     for (int i = 0; i < P; i++) loops += (int64_t)retvals[i];
@@ -113,6 +121,9 @@ int main(int argc, char *argv[]) {
     printf("pmbw (%d threads) : %8.1f MB/s\n", P, maxspeed);
   }
 
+#ifdef COURSE_CUNOK
+  free(cpuset);
+#endif
   free(tester);
   free(retvals);
   for (int i = 0; i < P; i++) free(args[i]->buf_);

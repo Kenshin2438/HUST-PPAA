@@ -67,23 +67,63 @@ Flags:                           fpu vme de pse tsc msr pae mce cx8 apic sep mtr
                                  _occup_llc dtherm ida arat pln pts
 ```
 
++ [CPU: Intel(R) Xeon(R) CPU E5-2683 v3 (14C28T, 2GHz) x 2](https://www.intel.cn/content/www/cn/zh/products/sku/81055/intel-xeon-processor-e52683-v3-35m-cache-2-00-ghz/specifications.html)
++ RAM:  32GB 2133MHz DIMM x 4
+
+
 ```
-coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 1
-pmbw (1 threads) :  16994.5 MB/s (3.7%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 2
-pmbw (2 threads) :  33716.6 MB/s (3.5%)
+pmbw (2 threads) :  34159.0 MB/s (2.0%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 3
-pmbw (3 threads) :  37983.4 MB/s (3.6%)
+pmbw (3 threads) :  37563.7 MB/s (2.1%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 4
-pmbw (4 threads) :  42110.0 MB/s (2.9%)
+pmbw (4 threads) :  41437.4 MB/s (0.2%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 5
-pmbw (5 threads) :  41202.8 MB/s (2.7%)
+pmbw (5 threads) :  42295.6 MB/s (1.4%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 6
-pmbw (6 threads) :  42063.8 MB/s (3.2%)
+pmbw (6 threads) :  42249.4 MB/s (0.6%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 7
-pmbw (7 threads) :  41034.9 MB/s (3.8%)
+pmbw (7 threads) :  41644.2 MB/s (0.6%)
 coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 8
-pmbw (8 threads) :  41727.5 MB/s (4.5%)
+pmbw (8 threads) :  41798.5 MB/s (0.7%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 9
+pmbw (9 threads) :  42030.0 MB/s (0.7%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 10
+pmbw (10 threads) :  41723.8 MB/s (0.4%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 11
+pmbw (11 threads) :  38948.0 MB/s (0.3%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 12
+pmbw (12 threads) :  41996.8 MB/s (0.2%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 13
+pmbw (13 threads) :  39441.5 MB/s (0.1%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 14
+pmbw (14 threads) :  41771.2 MB/s (0.1%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 15
+pmbw (15 threads) :  39773.8 MB/s (0.1%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 16
+pmbw (16 threads) :  41726.7 MB/s (0.2%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 17
+pmbw (17 threads) :  40057.9 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 18
+pmbw (18 threads) :  41710.8 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 19
+pmbw (19 threads) :  38761.8 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 20
+pmbw (20 threads) :  40570.4 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 22
+pmbw (22 threads) :  41181.3 MB/s (0.2%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 24
+pmbw (24 threads) :  41128.4 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 26
+pmbw (26 threads) :  41192.8 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 28
+pmbw (28 threads) :  41123.5 MB/s (0.2%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 30
+pmbw (30 threads) :  41035.3 MB/s (0.3%)
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 32
+pmbw (32 threads) :  40888.5 MB/s
+coder@f094ace882a5:~/project/membw$ nice -n 0 ./build/pmbw 56
+pmbw (56 threads) :  39039.5 MB/s (0.5%)
 ```
 
 ### Programming Assignment 1

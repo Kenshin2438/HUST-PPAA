@@ -10,8 +10,7 @@ def check(command: List[str]) -> None:
     process = subprocess.Popen(
         command,
         stdout=subprocess.PIPE,
-        text=True,
-        shell=True
+        text=True
     )
     N: int = 5 if len(command) == 1 else int(command[1])
 

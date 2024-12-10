@@ -20,64 +20,60 @@
 
 #include "util.h"
 
-#define SIZE (32 * 1024 * 1024)
-#define BLOCKSIZE 2048
-#define COUNT 16
-#define MAXREPEATS 10
-
-typedef struct {
-  void *buf_;
-  int64_t *srcbuf;
-  int64_t *dstbuf;
-} info;
+// clang-format off
+#define SIZE             (32 * 1024 * 1024)
+#define BLOCKSIZE        2048
+#define COUNT            16
+#define MAXREPEATS       10
 
 static pthread_barrier_t barrier;
 
 void *task(void *arg) {
-  const info *data = (info *)arg;
+  const size_t id = (size_t)arg;
+
+  cpu_set_t cpuset;
+  CPU_ZERO(&cpuset);
+  CPU_SET(id, &cpuset);
+  pthread_setaffinity_np(pthread_self(), sizeof(cpu_set_t), &cpuset);
+
+  void *buf;
+  int64_t *srcbuf, *dstbuf;
+  buf = alloc_four_aligned_buffers((void **)(&srcbuf), SIZE, NULL, 0,
+                                   (void **)(&dstbuf), SIZE, NULL, 0);
+  if (buf == NULL) exit(-1);
+  memcpy(dstbuf, srcbuf, SIZE);
+
   double t2, t1;
   int64_t loopcount = 0;
 
   pthread_barrier_wait(&barrier);
-
   t1 = gettime();
   do {
     loopcount++;
-    for (int i = 0; i < COUNT; i++) {
-      memcpy(data->dstbuf, data->srcbuf, SIZE);
-    }
+    for (int i = 0; i < COUNT; i++) memcpy(dstbuf, srcbuf, SIZE);
     t2 = gettime();
   } while (t2 - t1 < 0.5);
+  free(buf);
   return (void *)loopcount;
 }
+
+static size_t get_cpu_id(size_t thread_id) {
+  static const size_t SOCKET_NUM       =  4;
+  static const size_t CORES_PRE_SOCKET = 14;
+  // NUMA node 0 cpus: 0-13       28-41
+  // NUMA node 1 cpus:      14-27       42-55
+  const size_t socket_id = thread_id % SOCKET_NUM;
+  const size_t core_id   = thread_id / SOCKET_NUM;
+  return socket_id * CORES_PRE_SOCKET + (socket_id < 2 ? core_id : CORES_PRE_SOCKET - 1 - core_id);
+}
+// clang-format on
 
 int main(int argc, char *argv[]) {
   assert(argc == 2 && "Plz input the thread number.\n");
   const int P = atoi(argv[1]);
 
-#ifdef COURSE_CUNOK
-  cpu_set_t *cpuset = (cpu_set_t *)malloc(P * sizeof(cpu_set_t));
-  for (int i = 0; i < P; i++) {
-    const int id = 14 * (i % 4) + ((i % 4) >= 2 ? 13 - (i / 4) : (i / 4));
-    CPU_ZERO(&cpuset[i]);
-    CPU_SET(id, &cpuset[i]);
-  }
-#endif
-
   pthread_t *tester = (pthread_t *)malloc(P * sizeof(pthread_t));
   void **retvals = (void **)malloc(P * sizeof(void *));
-
-  info **args = (info **)malloc(P * sizeof(info *));
-  for (int i = 0; i < P; i++) {
-#ifdef COURSE_CUNOK
-    sched_setaffinity(0, sizeof(cpu_set_t), &cpuset[i]);
-#endif
-    args[i] = (info *)malloc(sizeof(info));
-    args[i]->buf_ = alloc_four_aligned_buffers((void **)(&(args[i]->srcbuf)), SIZE, NULL, 0,
-                                               (void **)(&(args[i]->dstbuf)), SIZE, NULL, 0);
-    if (args[i] == NULL) return EXIT_FAILURE;
-    memcpy(args[i]->dstbuf, args[i]->srcbuf, SIZE);
-  }
 
   // parallel bandwidth bench
   double t1, t2;
@@ -87,14 +83,13 @@ int main(int argc, char *argv[]) {
   maxspeed = 0;
 
   for (int _ = 0; _ < MAXREPEATS; _++) {
-    pthread_barrier_init(&barrier, NULL, P);
+    pthread_barrier_init(&barrier, NULL, P + 1);
     for (int i = 0; i < P; i++) {
-#ifdef COURSE_CUNOK
-      sched_setaffinity(0, sizeof(cpu_set_t), &cpuset[i]);
-#endif
-      pthread_create(&tester[i], NULL, task, (void *)args[i]);
-      if (i == P - 1) t1 = gettime();
+      const size_t id = get_cpu_id(i);
+      pthread_create(&tester[i], NULL, task, (void *)id);
     }
+    pthread_barrier_wait(&barrier);
+    t1 = gettime();
     for (int i = 0; i < P; i++) pthread_join(tester[i], &retvals[i]);
     t2 = gettime();
     pthread_barrier_destroy(&barrier);
@@ -121,13 +116,8 @@ int main(int argc, char *argv[]) {
     printf("pmbw (%d threads) : %8.1f MB/s\n", P, maxspeed);
   }
 
-#ifdef COURSE_CUNOK
-  free(cpuset);
-#endif
   free(tester);
   free(retvals);
-  for (int i = 0; i < P; i++) free(args[i]->buf_);
-  free(args);
 
-  return EXIT_SUCCESS;
+  return 0;
 }

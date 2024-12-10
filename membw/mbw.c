@@ -78,7 +78,7 @@ static double bandwidth_bench_helper(int64_t *dstbuf, int64_t *srcbuf,
                 for (i = 0; i < COUNT; i++)
                 {
                     for (j = 0; j < size; j += blocksize)
-                        {
+                    {
                         f(tmpbuf, srcbuf + j / sizeof(int64_t), blocksize);
                         f(dstbuf + j / sizeof(int64_t), tmpbuf, blocksize);
                     }

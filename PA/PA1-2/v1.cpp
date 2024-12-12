@@ -2,6 +2,7 @@
 #include <iostream>
 #include <semaphore>
 #include <stop_token>
+#include <syncstream>
 #include <thread>
 #include <vector>
 
@@ -26,14 +27,14 @@ auto main(int /*argc*/, char** argv) -> int {
     int R = (i + 1) % N;
 
     while (!token.stop_requested()) {
-      std::cout << std::format("{} is now hungry.\n", i);
+      std::osyncstream(std::cout) << std::format("{} is now hungry.\n", i);
       chopstick[L].acquire();
       chopstick[R].acquire();
 
-      std::cout << std::format("{} is now eating.\n", i);
+      std::osyncstream(std::cout) << std::format("{} is now eating.\n", i);
       // std::this_thread::sleep_for(200ms);
 
-      std::cout << std::format("{} is now thinking.\n", i);
+      std::osyncstream(std::cout) << std::format("{} is now thinking.\n", i);
       chopstick[L].release();
       chopstick[R].release();
 

@@ -2,12 +2,13 @@
 #include <chrono>
 #include <format>
 #include <fstream>
-#include <future>
 #include <iostream>
+#include <latch>
 #include <mutex>
 #include <numeric>
 #include <ranges>
 #include <syncstream>
+#include <thread>
 #include <vector>
 
 #include "miller_rabin.hpp"
@@ -17,10 +18,19 @@ auto main() -> int {
   using std::chrono::high_resolution_clock;
   using std::chrono::milliseconds;
 
+  constexpr int N = 100'000'000;
+  const int P = std::thread::hardware_concurrency();
+  // constexpr int P = 8;
+
+  const int slice = N / P;
+  const int extra = N % P;
+
   std::vector<int> prime;
   std::mutex mu;
 
-  auto task = [&mu, &prime](int id, int L, int R) {
+  std::latch timer_sync_point(P);
+  auto task = [&](int id, int L, int R) noexcept -> void {
+    timer_sync_point.arrive_and_wait();
     const auto start = high_resolution_clock::now();
     for (int x = L; x < R; x++) {
       if (miller_rabin_test(x)) {
@@ -33,19 +43,15 @@ auto main() -> int {
     std::osyncstream(std::cout) << std::format("Thread #{}: running time {}\n", id, T_ms);
   };
 
-  constexpr int N = 100'000'000;
-  const int P = 8;  // std::thread::hardware_concurrency() = 16
-  const int slice = (N / P) + 1;
-
-  const auto start = high_resolution_clock::now();
-  std::vector<std::future<void>> events;
+  std::vector<std::thread> events;
   events.reserve(P);
-  for (int i = 0; i < P; i++) {
-    const int L = i * slice + 1;
-    const int R = (i == P - 1) ? N : L + slice;
-    events.emplace_back(std::async(std::launch::async, task, i, L, R));
+  for (int i = 0, L = 1, R; i < P; i++, L = R) {
+    R = L + slice + int(i < extra);
+    events.emplace_back(task, i, L, R);
   }
-  for (auto &&fut : events) fut.get();
+  timer_sync_point.wait();
+  const auto start = high_resolution_clock::now();
+  for (auto &&thread : events) thread.join();
   const auto end = high_resolution_clock::now();
   const auto T_ms = duration_cast<milliseconds>(end - start);
 

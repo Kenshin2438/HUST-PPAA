@@ -1,0 +1,19 @@
+---
+If:
+  PathMatch: PA/.*
+  PathExclude: membw/.*
+Diagnostics:
+  ClangTidy:
+    Add:
+      - clang-analyzer-*
+      - bugprone-*
+      - modernize-*
+      - performance-*
+      - misc-unused-*
+      - readability-*
+    Remove:
+      - readability-identifier-length
+      - readability-braces-around-statements
+      - readability-magic-numbers
+      - bugprone-easily-swappable-parameters
+  UnusedIncludes: Strict

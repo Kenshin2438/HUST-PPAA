@@ -20,19 +20,18 @@ class NONBLOCKING_QUEUE {
   static inline constexpr std::size_t MOD_MASK{MAXN - 1};
 
  public:
+  inline constexpr NONBLOCKING_QUEUE() noexcept {
+    for (std::size_t i = 0; i < MAXN; i++) buffer_[i].version.store(i);
+  }
+
   inline constexpr void push(const T& value) noexcept {
     std::size_t tail = tail_.load(std::memory_order::relaxed);
     while (true) {
       const std::size_t index = tail & MOD_MASK;
-      const size_t count_push = buffer_[index].count_push.load(std::memory_order::acquire);
-      const size_t count_pop = buffer_[index].count_pop.load(std::memory_order::relaxed);
-
-      if (count_push == count_pop + 1U) continue;
-
-      if (tail / MAXN == count_push) {
+      if (buffer_[index].version.load(std::memory_order::acquire) == tail) {
         if (tail_.compare_exchange_weak(tail, tail + 1U, std::memory_order::relaxed)) {
           buffer_[index].value = value;
-          buffer_[index].count_push.store(count_push + 1U, std::memory_order::release);
+          buffer_[index].version.store(tail + 1U, std::memory_order::release);
           break;
         }
       } else {
@@ -45,15 +44,10 @@ class NONBLOCKING_QUEUE {
     std::size_t head = head_.load(std::memory_order::relaxed);
     while (true) {
       const std::size_t index = head & MOD_MASK;
-      const size_t count_pop = buffer_[index].count_pop.load(std::memory_order::acquire);
-      const size_t count_push = buffer_[index].count_push.load(std::memory_order::relaxed);
-
-      if (count_push == count_pop) continue;
-
-      if (head / MAXN == count_pop) {
-        if (head_.compare_exchange_strong(head, head + 1U, std::memory_order::relaxed)) {
-          value = buffer_[index].value;
-          buffer_[index].count_pop.store(count_pop + 1U, std::memory_order::release);
+      if (buffer_[index].version.load(std::memory_order::acquire) == (head + 1U)) {
+        if (head_.compare_exchange_weak(head, head + 1U, std::memory_order::relaxed)) {
+          value = std::move(buffer_[index].value);
+          buffer_[index].version.store(head + MAXN, std::memory_order::release);
           break;
         }
       } else {
@@ -63,11 +57,9 @@ class NONBLOCKING_QUEUE {
   }
 
  private:
-  struct data {
+  struct alignas(CACHE_LINE_SIZE) data {
     T value;
-
-    alignas(CACHE_LINE_SIZE) std::atomic<std::size_t> count_pop;
-    alignas(CACHE_LINE_SIZE) std::atomic<std::size_t> count_push;
+    std::atomic<std::size_t> version;
   };
   std::array<data, MAXN> buffer_{};
 

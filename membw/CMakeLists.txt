@@ -1,4 +1,8 @@
 project(membw LANGUAGES ASM C)
+message(WARNING
+  "Project membw should be run on https://course.cunok.cn:52443"
+  "\nIgnore if on the correct environment."
+)
 
 set(CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2")
 # Warning: missing .note.GNU-stack section implies executable stack

@@ -5,7 +5,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
 include(NoInSourceBuilds)
 
-add_subdirectory(membw)
+# add_subdirectory(membw)
 add_subdirectory(PA)
 
 set(CMAKE_EXPORT_COMPILE_COMMANDS ON)

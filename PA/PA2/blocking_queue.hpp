@@ -10,18 +10,23 @@ namespace PA2 {
 template <typename T, std::size_t MAXN = 2048U>
   requires(std::is_trivial<T>::value && MAXN >= 2 && (MAXN & (MAXN - 1)) == 0)
 class BLOCKING_QUEUE {
+ public:
+  using value_type = T;
+  using reference = T&;
+  using const_reference = const T&;
+
  private:
   static inline constexpr std::size_t MOD_MASK{MAXN - 1};
 
  public:
-  inline void add(const T& value) noexcept {
+  inline void push(const T& value) noexcept {
     std::lock_guard lock(mu_tail_);
     const std::size_t index = (tail_ += 1U) & MOD_MASK;
     sem_enqueue_.acquire();
     buffer_[index] = value;
     sem_dequeue_.release();
   }
-  inline void remove(T& value) noexcept {
+  inline void pop(T& value) noexcept {
     std::lock_guard lock(mu_head_);
     const std::size_t index = (head_ += 1U) & MOD_MASK;
     sem_dequeue_.acquire();

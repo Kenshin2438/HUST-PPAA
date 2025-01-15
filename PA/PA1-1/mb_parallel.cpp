@@ -19,8 +19,8 @@ auto main() -> int {
   using std::chrono::milliseconds;
 
   constexpr int N = 100'000'000;
-  const int P = std::thread::hardware_concurrency();
-  // constexpr int P = 8;
+  // const int P = std::thread::hardware_concurrency();
+  constexpr int P = 8;
 
   const int slice = N / P;
   const int extra = N % P;

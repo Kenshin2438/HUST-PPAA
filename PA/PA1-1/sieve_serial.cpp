@@ -1,4 +1,4 @@
-#include <bitset>
+#include <bitset>  // IWYU pragma: keep
 #include <cmath>
 #include <format>
 #include <fstream>
